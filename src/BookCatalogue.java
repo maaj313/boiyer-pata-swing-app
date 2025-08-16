@@ -5,19 +5,21 @@ import java.sql.*;
 
 public class BookCatalogue extends JFrame {
     JTable table;
-    JButton btn_order, btn_logout;
+    JButton btn_order, btn_logout, btn_request;
     DefaultTableModel model;
     String currentUser;
     private static final String DATABASE_URL = "jdbc:sqlite:boiyer_pata_users.db";
 
     public BookCatalogue(String username) {
         this.currentUser = username;
+        this.setIconImage(Main.icon_boiyer_pata.getImage());
 
         setTitle("Boiyer Pata - Book Catalogue");
         setSize(1024, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
+        setVisible(true);
 
         // Container setup
         Container c = getContentPane();
@@ -33,22 +35,31 @@ public class BookCatalogue extends JFrame {
         // Table
         String[] columnNames = {"ID", "Title", "Author", "Pages", "Copies Available"};
         model = new DefaultTableModel(columnNames, 0) {
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) { 
+            	return false; 
+            }
         };
         table = new JTable(model);
-        
         JScrollPane sp = new JScrollPane(table);
         sp.getViewport().setBackground(new Color(167, 199, 231));
-        sp.setBackground(new Color(167, 199, 231));
         c.add(sp, BorderLayout.CENTER);
 
         // Buttons
         btn_order = new JButton("Order Selected Book");
+        btn_order.setBackground(Color.green);
         btn_logout = new JButton("Logout");
+        btn_logout.setBackground(Color.red);
+        btn_logout.setForeground(Color.white);
+        btn_request = new JButton("Request a Book");
+        btn_logout.setCursor(Main.cur);
+        btn_order.setCursor(Main.cur);
+        btn_request.setCursor(Main.cur);
+        
         JPanel bottomPanel = new JPanel();
         bottomPanel.setBackground(new Color(167, 199, 231)); 
         bottomPanel.add(btn_order);
         bottomPanel.add(btn_logout);
+        bottomPanel.add(btn_request);
         c.add(bottomPanel, BorderLayout.SOUTH);
 
         loadBooksFromDB();
@@ -58,8 +69,12 @@ public class BookCatalogue extends JFrame {
             this.dispose();
             new Main();
         });
+        
+        btn_request.addActionListener(e -> {
+            new BookRequestWindow(currentUser);
+        });
 
-        setVisible(true);
+        
     }
 
     private void loadBooksFromDB() {
@@ -105,7 +120,7 @@ public class BookCatalogue extends JFrame {
                     insertOrder.executeUpdate();
 
                     conn.commit();
-                    JOptionPane.showMessageDialog(this, "You have ordered: " + bookTitle + "\nDelivery on Friday.");
+                    JOptionPane.showMessageDialog(this, "You have ordered: " + bookTitle + "\nDelivery will be on Friday.");
                     loadBooksFromDB();
                 } catch (SQLException e) {
                     JOptionPane.showMessageDialog(this, "Error ordering book: " + e.getMessage());

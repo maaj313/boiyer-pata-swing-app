@@ -1,171 +1,116 @@
 import javax.swing.*;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.*;
 
 public class Main extends JFrame {
-    JLabel be_a_member, full_name, mob, email, user_name, pass, address, alr_a_mem;
-    JTextField tf_fn, tf_mob, tf_email, tf_un, tf_adr;
-    JPasswordField tf_pass;
-    Font font_head;
-    ImageIcon icon_bp;
-    Container c1;
-    JButton sign_up, clear, sign_in;
-    Cursor handcur;
+    JTextField tf_username;
+    JPasswordField tf_password;
+    JButton btn_login, btn_clear, btn_signup;
+    JLabel lbl_user, lbl_pass, lbl_not_member;
+    static Cursor cur;
+    static ImageIcon icon_boiyer_pata;
 
-    private static final String DATABASE_URL = "jdbc:sqlite:boiyer_pata_user.db";
+    private static final String DATABASE_URL = "jdbc:sqlite:boiyer_pata_users.db";
 
     public Main() {
-        initDatabase();
-        initComponents();
+        initLoginComponents();
     }
 
-    private void initDatabase() {
-        try (Connection conn = DriverManager.getConnection(DATABASE_URL)) {
-            System.out.println("Database connected successfully");
-        } catch (Exception e) {
-            System.out.println("Database connection failed: " + e.getMessage());
+    private void initLoginComponents() {
+        setLayout(null);
+        getContentPane().setBackground(new Color(167, 199, 231));
+        icon_boiyer_pata = new ImageIcon(getClass().getResource("Boiyer_Pata_logo.png"));
+        setIconImage(Main.icon_boiyer_pata.getImage());
+        cur = new Cursor(Cursor.HAND_CURSOR);
+        
+        //labels and text fields
+        lbl_user = new JLabel("Username:");
+        lbl_user.setBounds(100, 80, 80, 30);
+        add(lbl_user);
+
+        tf_username = new JTextField();
+        tf_username.setBounds(190, 80, 200, 30);
+        add(tf_username);
+
+        lbl_pass = new JLabel("Password:");
+        lbl_pass.setBounds(100, 130, 80, 30);
+        add(lbl_pass);
+
+        tf_password = new JPasswordField();
+        tf_password.setBounds(190, 130, 200, 30);
+        add(tf_password);
+
+        //buttons
+        btn_login = new JButton("Login");
+        btn_login.setBounds(190, 180, 90, 30);
+        btn_login.setBackground(new Color(19, 189, 19));
+        btn_login.setForeground(Color.white);
+        btn_login.setCursor(cur);
+        add(btn_login);
+        
+        btn_clear = new JButton("Clear");
+        btn_clear.setBounds(300, 180, 90, 30);
+        btn_clear.setBackground(new Color(232, 60, 95));
+        btn_clear.setForeground(Color.white);
+        btn_clear.setCursor(cur);
+        add(btn_clear);
+
+        // "Not a member?" section
+        lbl_not_member = new JLabel("Not a member?");
+        lbl_not_member.setBounds(150, 230, 100, 30);
+        add(lbl_not_member);
+
+        btn_signup = new JButton("Sign Up");
+        btn_signup.setBounds(260, 230, 85, 25);
+        btn_signup.setCursor(cur);
+        add(btn_signup);
+
+        // Actions
+        btn_clear.addActionListener(e -> clearFields());
+        btn_login.addActionListener(e -> loginUser());
+        btn_signup.addActionListener(e -> {
+            this.dispose();
+            new userRegister();
+        });
+
+        setTitle("Boiyer Pata - Login");
+        setSize(500, 350);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
+        setVisible(true);
+    }
+
+    private void loginUser() {
+        String username = tf_username.getText();
+        String password = new String(tf_password.getPassword());
+
+        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                JOptionPane.showMessageDialog(this, "Login successful!");
+                this.dispose();
+                new BookCatalogue(username);
+            } else {
+                JOptionPane.showMessageDialog(this, "Invalid username or password");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
     }
 
-    public void initComponents() {
-        // Set icon
-        icon_bp = new ImageIcon(getClass().getResource("Boiyer_Pata_logo.png"));
-        this.setIconImage(icon_bp.getImage());
-
-        // Container setup
-        c1 = this.getContentPane();
-        c1.setLayout(null);
-        c1.setBackground(new Color(167, 199, 231));
-
-        font_head = new Font("Arial", Font.BOLD, 20);
-
-        be_a_member = new JLabel("Be a Member");
-        be_a_member.setBounds(460, 140, 220, 30);
-        be_a_member.setFont(font_head);
-        c1.add(be_a_member);
-
-        full_name = new JLabel("Full Name:");
-        full_name.setBounds(350, 190, 100, 30);
-        c1.add(full_name);
-
-        mob = new JLabel("Mobile:");
-        mob.setBounds(350, 225, 100, 30);
-        c1.add(mob);
-
-        email = new JLabel("Email:");
-        email.setBounds(350, 260, 100, 30);
-        c1.add(email);
-
-        user_name = new JLabel("Username:");
-        user_name.setBounds(350, 295, 100, 30);
-        c1.add(user_name);
-
-        pass = new JLabel("Password:");
-        pass.setBounds(350, 330, 100, 30);
-        c1.add(pass);
-
-        address = new JLabel("Address:");
-        address.setBounds(350, 365, 100, 30);
-        c1.add(address);
-
-        // Text fields
-        tf_fn = new JTextField();
-        tf_fn.setBounds(450, 189, 220, 32);
-        c1.add(tf_fn);
-
-        tf_mob = new JTextField();
-        tf_mob.setBounds(450, 224, 220, 32);
-        c1.add(tf_mob);
-
-        tf_email = new JTextField();
-        tf_email.setBounds(450, 259, 220, 32);
-        c1.add(tf_email);
-
-        tf_un = new JTextField();
-        tf_un.setBounds(450, 294, 220, 32);
-        c1.add(tf_un);
-
-        tf_pass = new JPasswordField();
-        tf_pass.setBounds(450, 329, 220, 32);
-        c1.add(tf_pass);
-
-        tf_adr = new JTextField();
-        tf_adr.setBounds(450, 364, 220, 32);
-        c1.add(tf_adr);
-
-        handcur = new Cursor(Cursor.HAND_CURSOR);
-
-        // Buttons
-        sign_up = new JButton("Sign Up");
-        sign_up.setBounds(400, 430, 100, 30);
-        sign_up.setBackground(Color.green);
-        sign_up.setCursor(handcur);
-        c1.add(sign_up);
-
-        clear = new JButton("Clear");
-        clear.setBounds(520, 430, 100, 30);
-        clear.setBackground(Color.red);
-        clear.setForeground(Color.white);
-        clear.setCursor(handcur);
-        c1.add(clear);
-
-        alr_a_mem = new JLabel("Already a Member?");
-        alr_a_mem.setBounds(400, 480, 150, 30);
-        c1.add(alr_a_mem);
-
-        sign_in = new JButton("Sign In");
-        sign_in.setBounds(535, 483, 100, 25);
-        sign_in.setCursor(handcur);
-        c1.add(sign_in);
-
-        // Clear button
-        clear.addActionListener(e -> clearFields());
-
-        // Sign-up button
-        sign_up.addActionListener(e -> {
-            String name = tf_fn.getText();
-            String mobile = tf_mob.getText();
-            String email = tf_email.getText();
-            String username = tf_un.getText();
-            String password = new String(tf_pass.getPassword());
-            String address = tf_adr.getText();
-
-            if (name.isEmpty() || mobile.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty() || address.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please fill all the fields");
-                return;
-            }
-
-            if (userRegister.registerUser(name, mobile, email, username, password, address)) {
-                JOptionPane.showMessageDialog(this, "Thank you for Registration");
-                clearFields();
-            }
-        });
-
-        // Sign-in button
-        sign_in.addActionListener(e -> {
-            this.dispose();
-            LoginWindow login = new LoginWindow();
-            login.setVisible(true);
-        });
-    }
-
     private void clearFields() {
-        tf_fn.setText("");
-        tf_mob.setText("");
-        tf_email.setText("");
-        tf_un.setText("");
-        tf_pass.setText("");
-        tf_adr.setText("");
-    }
-
+		tf_username.setText("");
+		tf_password.setText("");
+	}
+    
     public static void main(String[] args) {
-        Main frame1 = new Main();
-        frame1.setVisible(true);
-        frame1.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame1.setSize(1024, 700);
-        frame1.setLocationRelativeTo(null);
-        frame1.setTitle("Boiyer Pata");
-        frame1.setResizable(false);
+        new Main();
     }
 }
